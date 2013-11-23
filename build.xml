@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- build file for ant -->
+<project name="X-RIME" default="jar" basedir=".">
+    <property environment="env"/>
+    <property name="lib.home"     value="./lib" />
+    <property name="build.home"   value="./build" />
+    <property name="src.home"     value="./src" />
+    <property name="example.home" value="./example" />
+    <property name="test.home"    value="./build/test" />
+	<property name="test.src"     value="./test" />
+	<property name="jarfile"      value="xrime.jar" />
+	
+    <path id="compile.classpath">
+        <pathelement location="${build.home}" />
+        <fileset dir="${lib.home}">
+            <include name="*.jar" />
+        </fileset>
+        <fileset dir="." includes="*.jar" />
+    </path>
+    
+    <target name="init" >
+        <mkdir dir="${build.home}"/>
+        <mkdir dir="${test.home}"/>
+    	<mkdir dir="${test.home}/reports"/>
+    	<mkdir dir="${test.home}/report/html"/>
+    </target>
+    
+    <target name="clean">
+        <delete dir="${build.home}" />
+        <delete dir="${test.home}" />
+    	<delete dir="${test.home}/reports"/>
+    	<delete dir="${test.home}/report/html"/>
+        <delete file="${jarfile}"/>
+    </target>
+    
+    <target name="build_xrime" depends="init">
+        <javac srcdir="${src.home}"
+               destdir="${build.home}"
+               encoding="UTF-8"
+        	   debug="true"
+        	   debuglevel="lines,source"
+               verbose="false">
+            <classpath refid="compile.classpath"/>
+            <include name="**/**.java"/>
+        </javac>
+
+        <copy todir="${build.home}" verbose="true">
+            <fileset dir="${src.home}">
+                <include name="**/*.properties"/>
+            </fileset>
+        </copy>
+    </target>
+	
+    <target name="build_xrime_example" depends="init">
+        <javac srcdir="${example.home}"
+               destdir="${build.home}"
+               encoding="UTF-8"
+        	   debug="true"
+        	   debuglevel="lines,source"
+               verbose="false">
+            <classpath refid="compile.classpath"/>
+            <include name="**/**.java"/>
+        </javac>
+
+        <copy todir="${build.home}" verbose="true">
+            <fileset dir="${src.home}">
+                <include name="**/*.properties"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="build_xrime_test" depends="init">
+        <javac srcdir="${src.home}"
+               destdir="${test.home}"
+               encoding="UTF-8"
+               verbose="false">
+            <classpath refid="compile.classpath"/>
+            <include name="**/**.java"/>
+        </javac>
+
+        <javac srcdir="${test.src}"
+               destdir="${test.home}"
+               encoding="UTF-8"
+               verbose="false">
+            <classpath refid="compile.classpath"/>
+            <include name="**/**.java"/>
+        </javac>
+    	
+        <copy todir="${test.home}" verbose="true">
+            <fileset dir="${src.home}">
+                <include name="**/*.properties"/>
+            </fileset>
+        </copy>
+    </target>
+        	
+    <target name="junit">
+        <available property="junit.present" classname="junit.framework.TestCase" />
+    </target>
+	
+    <target name="test_xrime" depends="init,junit,build_xrime_test" if="junit.present">
+    	<junit printsummary="yes" haltonfailure="no">
+    	  <classpath refid="compile.classpath"/>
+    	  <classpath>
+    	      <pathelement location="${test.home}" />
+    	  </classpath>
+
+    	  <formatter type="xml"/>
+
+    	  <batchtest fork="yes" todir="${test.home}">
+    	      <fileset dir="${test.home}">
+    	          <include name="**/*Test.class"/>
+    	      </fileset>
+    	  </batchtest>
+    	</junit>
+    	
+    	<junitreport todir="${test.home}/reports">
+    	    <fileset dir="${test.home}">
+    	    	<include name="TEST-*.xml"/>
+    	    </fileset>
+    	    <report format="frames" todir="${test.home}/reports/html"/>
+    	</junitreport>
+    </target>
+	
+	<target name="jar" depends="build_xrime,build_xrime_example" description="Build jar">
+		<delete file="${jarfile}" />
+	    <jar jarfile="${jarfile}"
+	        basedir="${build.home}" >
+	    </jar>
+	</target>
+</project>
